@@ -5,6 +5,7 @@ import os
 import subprocess
 from typing import List, Dict
 from datetime import datetime
+from theme import get_colors, toggle_theme, is_dark
 
 # 统一配色体系（色彩丰富但不杂乱，有统一调性）
 # 主色调（品牌色）：#165DFF （深邃科技蓝，用于主按钮、选中态、高亮边框）
@@ -23,20 +24,21 @@ from datetime import datetime
 #   辅助文本色：#86909C
 #   边框色：#E5E6EB
 
-# 颜色常量定义
-COLOR_PRIMARY = "#165DFF"      # 主色调（品牌色）
-COLOR_ACCENT = "#FF7D00"      # 强调色（操作色）
-COLOR_SUCCESS = "#00B42A"     # 成功态
-COLOR_WARNING = "#FF9A2E"     # 警告态
-COLOR_ERROR = "#F53F3F"       # 错误态
-COLOR_BG_WINDOW = "#F5F7FA"    # 窗口背景色
-COLOR_BG_CARD = "#FFFFFF"     # 卡片/内容区背景
-COLOR_BG_LIST_EVEN = "#F9FAFC" # 列表隔行背景
-COLOR_BG_HOVER = "#E8F3FF"    # hover态背景
-COLOR_TEXT_PRIMARY = "#1D2129" # 正文文本色
-COLOR_TEXT_SECONDARY = "#4E5969" # 次要文本色
-COLOR_TEXT_TERTIARY = "#86909C" # 辅助文本色
-COLOR_BORDER = "#E5E6EB"      # 边框色
+# 从主题系统获取颜色常量
+COLORS = get_colors()
+COLOR_PRIMARY = COLORS["PRIMARY"]
+COLOR_ACCENT = COLORS["ACCENT"]
+COLOR_SUCCESS = COLORS["SUCCESS"]
+COLOR_WARNING = COLORS["WARNING"]
+COLOR_ERROR = COLORS["ERROR"]
+COLOR_BG_WINDOW = COLORS["BG_WINDOW"]
+COLOR_BG_CARD = COLORS["BG_CARD"]
+COLOR_BG_LIST_EVEN = COLORS["BG_LIST_EVEN"]
+COLOR_BG_HOVER = COLORS["BG_HOVER"]
+COLOR_TEXT_PRIMARY = COLORS["TEXT_PRIMARY"]
+COLOR_TEXT_SECONDARY = COLORS["TEXT_SECONDARY"]
+COLOR_TEXT_TERTIARY = COLORS["TEXT_TERTIARY"]
+COLOR_BORDER = COLORS["BORDER"]
 
 # 导入自定义模块
 from db_manager import (
@@ -81,6 +83,94 @@ class PDFAITool:
         x = (self.root.winfo_screenwidth() // 2) - (width // 2)
         y = (self.root.winfo_screenheight() // 2) - (height // 2)
         self.root.geometry(f'{width}x{height}+{x}+{y}')
+
+    def toggle_theme_mode(self):
+        """Toggle between light and dark theme."""
+        global COLOR_PRIMARY, COLOR_ACCENT, COLOR_SUCCESS, COLOR_WARNING, COLOR_ERROR
+        global COLOR_BG_WINDOW, COLOR_BG_CARD, COLOR_BG_LIST_EVEN, COLOR_BG_HOVER
+        global COLOR_TEXT_PRIMARY, COLOR_TEXT_SECONDARY, COLOR_TEXT_TERTIARY, COLOR_BORDER
+
+        toggle_theme()
+        COLORS = get_colors()
+
+        COLOR_PRIMARY = COLORS["PRIMARY"]
+        COLOR_ACCENT = COLORS["ACCENT"]
+        COLOR_SUCCESS = COLORS["SUCCESS"]
+        COLOR_WARNING = COLORS["WARNING"]
+        COLOR_ERROR = COLORS["ERROR"]
+        COLOR_BG_WINDOW = COLORS["BG_WINDOW"]
+        COLOR_BG_CARD = COLORS["BG_CARD"]
+        COLOR_BG_LIST_EVEN = COLORS["BG_LIST_EVEN"]
+        COLOR_BG_HOVER = COLORS["BG_HOVER"]
+        COLOR_TEXT_PRIMARY = COLORS["TEXT_PRIMARY"]
+        COLOR_TEXT_SECONDARY = COLORS["TEXT_SECONDARY"]
+        COLOR_TEXT_TERTIARY = COLORS["TEXT_TERTIARY"]
+        COLOR_BORDER = COLORS["BORDER"]
+
+        # Update UI colors
+        self._refresh_ui_colors()
+
+        self.status_label.config(
+            text=f"主题已切换为{'深色' if is_dark() else '浅色'}模式",
+            fg=COLOR_TEXT_SECONDARY
+        )
+
+    def _refresh_ui_colors(self):
+        """Refresh UI colors after theme change."""
+        # Update root background
+        self.root.config(bg=COLOR_BG_WINDOW)
+
+        # Update treeview colors
+        style = ttk.Style()
+        style.configure('Treeview',
+                        background=COLOR_BG_CARD,
+                        foreground=COLOR_TEXT_PRIMARY,
+                        fieldbackground=COLOR_BG_CARD)
+        style.configure('Treeview.Heading',
+                        background=COLOR_BG_CARD,
+                        foreground=COLOR_TEXT_SECONDARY)
+        style.map('Treeview',
+                  background=[('selected', COLOR_PRIMARY)],
+                  foreground=[('selected', 'white')])
+        style.map('Treeview',
+                  background=[('selected', COLOR_PRIMARY)],
+                  foreground=[('selected', 'white')])
+
+        # Update button colors
+        if hasattr(self, 'select_btn'):
+            self.select_btn.config(bg=COLOR_PRIMARY, fg="white")
+        if hasattr(self, 'generate_btn'):
+            self.generate_btn.config(bg=COLOR_PRIMARY, fg="white")
+        if hasattr(self, 'open_btn'):
+            self.open_btn.config(bg=COLOR_BG_CARD, fg=COLOR_PRIMARY)
+        if hasattr(self, 'delete_btn'):
+            self.delete_btn.config(bg=COLOR_BG_CARD, fg=COLOR_ERROR)
+        if hasattr(self, 'theme_btn'):
+            self.theme_btn.config(bg=COLOR_BG_CARD, fg=COLOR_TEXT_PRIMARY)
+        if hasattr(self, 'search_entry'):
+            self.search_entry.config(
+                bg="white",
+                fg=COLOR_TEXT_PRIMARY,
+                highlightbackground=COLOR_BORDER
+            )
+
+        # Update frame backgrounds
+        for widget in self.root.winfo_children():
+            if isinstance(widget, tk.Frame):
+                widget.config(bg=COLOR_BG_WINDOW)
+
+        # Reload records to refresh list colors
+        if hasattr(self, 'tree'):
+            self.load_records()
+
+    def show_shortcut_hints(self):
+        """显示快捷键提示"""
+        hints = "快捷键: Ctrl+N导入 | Ctrl+G生成摘要 | Ctrl+O打开 | Delete删除 | Ctrl+F搜索 | F5刷新 | F1帮助"
+        self.status_label.config(text=hints, fg=COLOR_TEXT_TERTIARY)
+        # 5秒后恢复状态文本
+        if hasattr(self, '_status_restore_id'):
+            self.root.after_cancel(self._status_restore_id)
+        self._status_restore_id = self.root.after(5000, lambda: self.status_label.config(text="就绪", fg=COLOR_TEXT_SECONDARY))
 
     def create_ui(self):
         """创建用户界面"""
@@ -219,6 +309,21 @@ class PDFAITool:
         )
         self.search_entry.pack(side=tk.RIGHT, padx=(0, 5))
         self.search_entry.insert(0, "输入关键词检索文件名/摘要")
+
+        # Theme toggle button
+        self.theme_btn = tk.Button(
+            search_container,
+            text="🌓",
+            command=self.toggle_theme_mode,
+            bg=COLOR_BG_CARD,
+            fg=COLOR_TEXT_PRIMARY,
+            font=("Segoe UI Emoji", 10),
+            relief="flat",
+            bd=0,
+            cursor="hand2",
+            padx=8
+        )
+        self.theme_btn.pack(side=tk.RIGHT, padx=(5, 0))
         self.search_entry.bind("<FocusIn>", self.on_search_focus_in)
         self.search_entry.bind("<FocusOut>", self.on_search_focus_out)
         self.search_entry.bind("<Return>", lambda e: self.search_records())
@@ -375,6 +480,17 @@ class PDFAITool:
         # 进度条
         self.progress = ttk.Progressbar(main_frame, mode='indeterminate', length=200)
         self.progress.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(5, 0))
+
+        # ========== 键盘快捷键绑定 ==========
+        self.root.bind('<Control-n>', lambda e: self.select_pdf_files())
+        self.root.bind('<Control-g>', lambda e: self.batch_generate_summary())
+        self.root.bind('<Control-o>', lambda e: self.open_selected_file())
+        self.root.bind('<Control-d>', lambda e: self.delete_selected_file())
+        self.root.bind('<Control-f>', lambda e: self.search_entry.focus_set())
+        self.root.bind('<Delete>', lambda e: self.delete_selected_file())
+        self.root.bind('<F5>', lambda e: self.load_records())
+        self.root.bind('<F1>', lambda e: self.show_shortcut_hints())
+        self.root.bind('<Escape>', lambda e: self.tree.selection_remove(self.tree.selection()) if self.tree.selection() else None)
 
     def on_search_focus_in(self, e):
         """搜索框聚焦时清空placeholder"""
