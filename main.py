@@ -334,6 +334,72 @@ class PDFAITool:
         tk.Button(btn_frame, text="取消", command=dialog.destroy,
                   font=("微软雅黑", 10), relief="flat", padx=20).pack(side=tk.LEFT, padx=10)
 
+    def export_to_excel(self):
+        """导出记录到Excel"""
+        from exporter import export_to_excel, can_export_excel
+
+        if not can_export_excel():
+            messagebox.showerror("导出失败", "请先安装openpyxl: pip install openpyxl")
+            return
+
+        # 获取要导出的记录
+        records = get_all_records()
+        if not records:
+            messagebox.showwarning("提示", "没有可导出的记录")
+            return
+
+        # 选择保存位置
+        from tkinter import filedialog
+        file_path = filedialog.asksaveasfilename(
+            title="导出Excel文件",
+            defaultextension=".xlsx",
+            filetypes=[("Excel文件", "*.xlsx")],
+            initialfile=f"PDF摘要导出_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
+
+        if not file_path:
+            return
+
+        try:
+            export_to_excel(records, file_path)
+            messagebox.showinfo("导出成功", f"已导出 {len(records)} 条记录到:\n{file_path}")
+            self.status_label.config(text=f"已导出到: {os.path.basename(file_path)}", fg=COLOR_SUCCESS)
+        except Exception as e:
+            messagebox.showerror("导出失败", f"导出时出错:\n{e}")
+
+    def export_to_word(self):
+        """导出记录到Word"""
+        from exporter import export_to_word, can_export_word
+
+        if not can_export_word():
+            messagebox.showerror("导出失败", "请先安装python-docx: pip install python-docx")
+            return
+
+        # 获取要导出的记录
+        records = get_all_records()
+        if not records:
+            messagebox.showwarning("提示", "没有可导出的记录")
+            return
+
+        # 选择保存位置
+        from tkinter import filedialog
+        file_path = filedialog.asksaveasfilename(
+            title="导出Word文件",
+            defaultextension=".docx",
+            filetypes=[("Word文件", "*.docx")],
+            initialfile=f"PDF摘要导出_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
+
+        if not file_path:
+            return
+
+        try:
+            export_to_word(records, file_path)
+            messagebox.showinfo("导出成功", f"已导出 {len(records)} 条记录到:\n{file_path}")
+            self.status_label.config(text=f"已导出到: {os.path.basename(file_path)}", fg=COLOR_SUCCESS)
+        except Exception as e:
+            messagebox.showerror("导出失败", f"导出时出错:\n{e}")
+
     def create_ui(self):
         """创建用户界面"""
         # 主容器
@@ -453,10 +519,26 @@ class PDFAITool:
         self.delete_btn.bind("<Enter>", lambda e: on_enter(e, self.delete_btn))
         self.delete_btn.bind("<Leave>", lambda e: on_leave(e, self.delete_btn))
 
-        # 右侧检索框
+        # 右侧检索区
         search_container = tk.Frame(top_bar, bg=COLOR_BG_CARD)
         search_container.grid(row=0, column=1, sticky=(tk.E))
+        search_container.columnconfigure(0, weight=0)
+        search_container.columnconfigure(1, weight=0)
 
+        # 标签筛选下拉框
+        self.tag_filter_var = tk.StringVar(value="全部标签")
+        self.tag_filter = ttk.Combobox(
+            search_container,
+            textvariable=self.tag_filter_var,
+            values=["全部标签"],
+            state="readonly",
+            width=10,
+            font=("微软雅黑", 9)
+        )
+        self.tag_filter.grid(row=0, column=0, padx=(0, 5))
+        self.tag_filter.bind('<<ComboboxSelected>>', self.on_tag_filter_changed)
+
+        # 搜索框
         self.search_entry = tk.Entry(
             search_container,
             font=("微软雅黑", 10),
@@ -467,10 +549,13 @@ class PDFAITool:
             highlightthickness=1,
             highlightbackground=COLOR_BORDER,
             insertbackground=COLOR_TEXT_PRIMARY,
-            width=35
+            width=20
         )
-        self.search_entry.pack(side=tk.RIGHT, padx=(0, 5))
-        self.search_entry.insert(0, "输入关键词检索文件名/摘要")
+        self.search_entry.grid(row=0, column=1, padx=(0, 5))
+        self.search_entry.insert(0, "输入关键词检索")
+        self.search_entry.bind("<FocusIn>", self.on_search_focus_in)
+        self.search_entry.bind("<FocusOut>", self.on_search_focus_out)
+        self.search_entry.bind("<Return>", lambda e: self.search_records())
 
         # Theme toggle button
         self.theme_btn = tk.Button(
@@ -485,10 +570,26 @@ class PDFAITool:
             cursor="hand2",
             padx=8
         )
-        self.theme_btn.pack(side=tk.RIGHT, padx=(5, 0))
-        self.search_entry.bind("<FocusIn>", self.on_search_focus_in)
-        self.search_entry.bind("<FocusOut>", self.on_search_focus_out)
-        self.search_entry.bind("<Return>", lambda e: self.search_records())
+        self.theme_btn.grid(row=0, column=2, padx=(5, 0))
+
+        # 导出按钮
+        self.export_var = tk.StringVar(value="导出")
+        export_btn = tk.Menubutton(
+            search_container,
+            text="📤 导出",
+            font=("微软雅黑", 9),
+            bg=COLOR_BG_CARD,
+            fg=COLOR_PRIMARY,
+            relief="flat",
+            padx=10,
+            cursor="hand2"
+        )
+        export_btn.grid(row=0, column=3, padx=(5, 0))
+
+        export_menu = tk.Menu(export_btn, tearoff=0)
+        export_menu.add_command(label="导出到 Excel (.xlsx)", command=self.export_to_excel)
+        export_menu.add_command(label="导出到 Word (.docx)", command=self.export_to_word)
+        export_btn['menu'] = export_menu
 
         # 搜索框hover效果
         def on_search_enter(e):
@@ -671,15 +772,33 @@ class PDFAITool:
 
     def on_search_focus_in(self, e):
         """搜索框聚焦时清空placeholder"""
-        if self.search_entry.get() == "输入关键词检索文件名/摘要":
+        if self.search_entry.get() == "输入关键词检索":
             self.search_entry.delete(0, tk.END)
             self.search_entry.config(fg=COLOR_TEXT_PRIMARY)
 
     def on_search_focus_out(self, e):
         """搜索框失焦时显示placeholder"""
         if not self.search_entry.get().strip():
-            self.search_entry.insert(0, "输入关键词检索文件名/摘要")
+            self.search_entry.insert(0, "输入关键词检索")
             self.search_entry.config(fg=COLOR_TEXT_TERTIARY)
+
+    def on_tag_filter_changed(self, event):
+        """标签筛选变化时刷新列表"""
+        selected_tag = self.tag_filter_var.get()
+        if selected_tag == "全部标签":
+            self.load_records()
+        else:
+            records = get_records_by_tags([selected_tag])
+            self.load_records(records)
+        self.status_label.config(text=f"标签筛选: {selected_tag}", fg=COLOR_TEXT_SECONDARY)
+
+    def refresh_tag_filter(self):
+        """刷新标签筛选下拉框"""
+        all_tags = get_all_tags()
+        if all_tags:
+            self.tag_filter['values'] = ["全部标签"] + all_tags
+        else:
+            self.tag_filter['values'] = ["全部标签"]
 
     def load_records(self, records=None):
         """加载记录到列表"""
@@ -709,6 +828,9 @@ class PDFAITool:
 
         # 更新状态栏
         self.stats_label.config(text=f"当前共 {len(records)} 个文件 | 检索到 {len(records)} 条结果")
+
+        # 刷新标签筛选下拉框
+        self.refresh_tag_filter()
 
     def select_pdf_files(self):
         """选择文档文件（支持PDF、TXT、Word、Excel等）"""
@@ -790,6 +912,7 @@ class PDFAITool:
         """处理完成后更新UI"""
         self.set_status("就绪", loading=False)
         self.load_records()
+        self.refresh_tag_filter()
         self.select_btn.config(state=tk.NORMAL)
         self.generate_btn.config(state=tk.NORMAL)
 
