@@ -3,6 +3,11 @@ from tkinter import ttk, scrolledtext, messagebox, filedialog
 import threading
 import os
 import subprocess
+try:
+    from tkinterdnd2 import TkinterDnD, DND_FILES
+    HAS_TKINTERDND2 = True
+except ImportError:
+    HAS_TKINTERDND2 = False
 from typing import List, Dict
 from datetime import datetime
 from theme import get_colors, toggle_theme, is_dark
@@ -68,6 +73,12 @@ class PDFAITool:
 
         # 创建界面
         self.create_ui()
+
+        # 设置拖拽导入支持
+        if HAS_TKINTERDND2:
+            self._setup_drag_drop()
+        else:
+            print("提示: tkinterdnd2未安装，拖拽功能不可用。请运行: pip install tkinterdnd2")
 
         # 加载已有记录
         self.load_records()
@@ -162,6 +173,37 @@ class PDFAITool:
         # Reload records to refresh list colors
         if hasattr(self, 'tree'):
             self.load_records()
+
+    def _setup_drag_drop(self):
+        """设置拖拽文件导入"""
+        # 使用顶层窗口作为drop target
+        self.root.drop_target_register(DND_FILES)
+        self.root.dnd_bind('<<Drop>>', self.on_file_drop)
+
+    def on_file_drop(self, event):
+        """处理拖拽的文件"""
+        if not event.data:
+            return
+
+        # 解析拖拽的文件路径
+        files = self.root.tk.splitlist(event.data)
+
+        # 过滤出支持的文件类型
+        supported_extensions = ('.pdf', '.txt', '.doc', '.docx', '.xls', '.xlsx')
+        valid_files = [f for f in files if any(f.lower().endswith(ext) for ext in supported_extensions)]
+
+        if not valid_files:
+            messagebox.showwarning("提示", "不支持的文件格式\n请拖拽 PDF、TXT、Word 或 Excel 文件")
+            return
+
+        # 处理拖拽的文件
+        self.set_status(f"正在导入 {len(valid_files)} 个文件...", loading=True)
+        self.select_btn.config(state=tk.DISABLED)
+        self.generate_btn.config(state=tk.DISABLED)
+
+        thread = threading.Thread(target=self._process_document_files, args=(valid_files,))
+        thread.daemon = True
+        thread.start()
 
     def show_shortcut_hints(self):
         """显示快捷键提示"""
@@ -1041,7 +1083,10 @@ PDF AI 智能摘要工具 v2.0
 
 def main():
     """主函数"""
-    root = tk.Tk()
+    if HAS_TKINTERDND2:
+        root = TkinterDnD.Tk()
+    else:
+        root = tk.Tk()
     app = PDFAITool(root)
 
     # 设置窗口图标（可选）
