@@ -172,6 +172,126 @@ class PDFAITool:
             self.root.after_cancel(self._status_restore_id)
         self._status_restore_id = self.root.after(5000, lambda: self.status_label.config(text="就绪", fg=COLOR_TEXT_SECONDARY))
 
+    def show_context_menu(self, event):
+        """显示右键菜单"""
+        # 选中右键点击的项
+        item = self.tree.identify_row(event.y)
+        if item:
+            if item not in self.tree.selection():
+                self.tree.selection_set(item)
+            self.tree.focus(item)
+        else:
+            return  # 点击空白区域不显示菜单
+
+        try:
+            self.context_menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            self.context_menu.grab_release()
+
+    def regenerate_summary(self):
+        """重新生成摘要（先清空再生成）"""
+        selected_items = self.tree.selection()
+        if not selected_items:
+            messagebox.showwarning("提示", "请先选择要重新生成摘要的记录")
+            return
+
+        item = selected_items[0]
+        record_id = self.tree.item(item)['values'][0]
+
+        # 确认操作
+        result = messagebox.askyesno(
+            "确认重新生成",
+            "将清空现有摘要并重新生成，确定继续？"
+        )
+        if not result:
+            return
+
+        # 清空摘要
+        update_summary(record_id, "")
+        self.load_records()
+        self.status_label.config(text="摘要已清空，请重新选择生成", fg=COLOR_WARNING)
+
+    def copy_file_path(self):
+        """复制文件路径到剪贴板"""
+        selected_items = self.tree.selection()
+        if not selected_items:
+            return
+
+        item = selected_items[0]
+        record_id = self.tree.item(item)['values'][0]
+        record = get_record_by_id(record_id)
+
+        if record:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(record['file_path'])
+            self.status_label.config(text="文件路径已复制到剪贴板", fg=COLOR_SUCCESS)
+
+    def copy_summary(self):
+        """复制摘要到剪贴板"""
+        selected_items = self.tree.selection()
+        if not selected_items:
+            return
+
+        item = selected_items[0]
+        record_id = self.tree.item(item)['values'][0]
+        record = get_record_by_id(record_id)
+
+        if record and record.get('summary'):
+            self.root.clipboard_clear()
+            self.root.clipboard_append(record['summary'])
+            self.status_label.config(text="摘要已复制到剪贴板", fg=COLOR_SUCCESS)
+        else:
+            self.status_label.config(text="无摘要可复制", fg=COLOR_WARNING)
+
+    def edit_tags(self):
+        """编辑标签对话框"""
+        selected_items = self.tree.selection()
+        if not selected_items:
+            messagebox.showwarning("提示", "请先选择要编辑标签的记录")
+            return
+
+        item = selected_items[0]
+        record_id = self.tree.item(item)['values'][0]
+        record = get_record_by_id(record_id)
+
+        if not record:
+            return
+
+        # 创建标签编辑对话框
+        dialog = tk.Toplevel(self.root)
+        dialog.title("编辑标签")
+        dialog.geometry("400x150")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        # 居中显示
+        dialog.update_idletasks()
+        x = (dialog.winfo_screenwidth() // 2) - (dialog.winfo_width() // 2)
+        y = (dialog.winfo_screenheight() // 2) - (dialog.winfo_height() // 2)
+        dialog.geometry(f'+{x}+{y}')
+
+        tk.Label(dialog, text="标签（用逗号分隔）：", font=("微软雅黑", 10)).pack(pady=(20, 5))
+
+        entry = tk.Entry(dialog, font=("微软雅黑", 10), width=40)
+        entry.pack(pady=10)
+        entry.insert(0, record.get('tags') or "")
+        entry.select_range(0, tk.END)
+        entry.focus_set()
+
+        def save_tags():
+            tags = entry.get().strip()
+            if update_tags(record_id, tags):
+                self.load_records()
+                self.status_label.config(text="标签已更新", fg=COLOR_SUCCESS)
+            dialog.destroy()
+
+        btn_frame = tk.Frame(dialog)
+        btn_frame.pack(pady=10)
+        tk.Button(btn_frame, text="保存", command=save_tags, bg=COLOR_PRIMARY, fg="white",
+                  font=("微软雅黑", 10), relief="flat", padx=20).pack(side=tk.LEFT, padx=10)
+        tk.Button(btn_frame, text="取消", command=dialog.destroy,
+                  font=("微软雅黑", 10), relief="flat", padx=20).pack(side=tk.LEFT, padx=10)
+
     def create_ui(self):
         """创建用户界面"""
         # 主容器
@@ -407,6 +527,21 @@ class PDFAITool:
 
         # 绑定选择事件
         self.tree.bind('<<TreeviewSelect>>', self.on_record_select)
+
+        # ========== 右键菜单 ==========
+        self.context_menu = tk.Menu(self.root, tearoff=0)
+        self.context_menu.add_command(label="打开文件", command=self.open_selected_file, accelerator="Ctrl+O")
+        self.context_menu.add_command(label="生成摘要", command=self.batch_generate_summary, accelerator="Ctrl+G")
+        self.context_menu.add_command(label="重新生成摘要", command=self.regenerate_summary)
+        self.context_menu.add_separator()
+        self.context_menu.add_command(label="复制文件路径", command=self.copy_file_path)
+        self.context_menu.add_command(label="复制摘要", command=self.copy_summary)
+        self.context_menu.add_command(label="编辑标签", command=self.edit_tags)
+        self.context_menu.add_separator()
+        self.context_menu.add_command(label="删除记录", command=self.delete_selected_file, accelerator="Delete", fg=COLOR_ERROR)
+
+        # 绑定右键菜单
+        self.tree.bind('<Button-3>', self.show_context_menu)
 
         # 右侧：摘要详情区
         summary_frame = tk.Frame(content_frame, bg=COLOR_BG_WINDOW, padx=20, pady=16)
