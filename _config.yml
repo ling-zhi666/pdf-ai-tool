@@ -1,0 +1,27 @@
+title: PDF AI 智能摘要工具
+description: AI驱动的PDF文档摘要生成器
+theme: jekyll-theme-primer
+exclude:
+  - docs/
+  - installer/
+  - "*.py"
+  - "*.spec"
+  - "*.iss"
+  - LICENSE
+  - "main copy.py"
+  - "document_processor copy.py"
+  - main1.py
+  - nul
+  - pdf_processor.py
+  - set_sumatra*.py
+  - set_sumatra*.bat
+  - "*.db"
+  - "*.pdf"
+  - "*.xlsx"
+  - "*.docx"
+  - theme.py
+  - config.py
+  - db_manager.py
+  - ai_summarizer.py
+  - exporter.py
+  - pdf_ai_tool.db
