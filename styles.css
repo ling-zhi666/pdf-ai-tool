@@ -730,14 +730,19 @@ section {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  aspect-ratio: 16/10;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   margin-bottom: 16px;
   transition: all var(--transition-base);
   overflow: hidden;
   position: relative;
+}
+
+.screenshot-box img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 .screenshot-box::before {
