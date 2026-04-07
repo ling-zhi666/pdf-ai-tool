@@ -1,0 +1,4 @@
+exclude:
+  - docs/superpowers/plans
+  - docs/superpowers/specs
+  - docs/superpowers
