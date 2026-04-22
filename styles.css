@@ -1,3 +1,13 @@
+/* ===== PDF AI TOOL - REDESIGNED with PROGRESSIVE ENHANCEMENT =====
+
+   KEY CHANGES:
+   1. CSS-FIRST: Elements are VISIBLE by default, not hidden with opacity:0
+   2. CSS ANIMATIONS: Native CSS animations work WITHOUT JavaScript
+   3. JS ENHANCEMENT: GSAP adds polish on top, but never required for basic visibility
+   4. REDUCED MOTION: Respects user preferences via prefers-reduced-motion
+
+   ============================================================ */
+
 /* ===== CSS VARIABLES & THEME ===== */
 :root {
   /* Brand Colors */
@@ -403,6 +413,11 @@ svg {
   max-width: 640px;
 }
 
+/* ============================================================
+   KEY FIX: Elements are VISIBLE by default (opacity: 1)
+   CSS animations provide entrance effects
+   JS is optional enhancement, not required for visibility
+   ============================================================ */
 .hero-badge {
   display: inline-flex;
   align-items: center;
@@ -415,8 +430,9 @@ svg {
   font-size: 13px;
   font-weight: 600;
   margin-bottom: 24px;
-  opacity: 0;
-  transform: translateY(20px);
+  /* REMOVED: opacity: 0 and transform */
+  /* ADDED: CSS native entrance animation */
+  animation: fadeSlideUp 0.6s ease-out both;
 }
 
 .badge-dot {
@@ -432,14 +448,29 @@ svg {
   50% { opacity: 0.5; transform: scale(0.8); }
 }
 
+/* ============================================================
+   KEY FIX: hero-title is VISIBLE by default
+   ============================================================ */
 .hero-title {
   font-size: clamp(44px, 6vw, 72px);
   font-weight: 800;
   line-height: 1.1;
   margin-bottom: 24px;
   color: var(--color-text);
-  opacity: 0;
-  transform: translateY(30px);
+  /* REMOVED: opacity: 0 and transform */
+  /* CSS animation provides entrance */
+  animation: fadeSlideUp 0.8s ease-out 0.1s both;
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .title-line {
@@ -453,13 +484,16 @@ svg {
   background-clip: text;
 }
 
+/* ============================================================
+   KEY FIX: hero-subtitle is VISIBLE by default
+   ============================================================ */
 .hero-subtitle {
   font-size: 18px;
   color: var(--color-text-secondary);
   margin-bottom: 36px;
   line-height: 1.8;
-  opacity: 0;
-  transform: translateY(30px);
+  /* REMOVED: opacity: 0 and transform */
+  animation: fadeSlideUp 0.8s ease-out 0.2s both;
 }
 
 .hero-subtitle strong {
@@ -467,22 +501,28 @@ svg {
   font-weight: 700;
 }
 
+/* ============================================================
+   KEY FIX: hero-actions is VISIBLE by default
+   ============================================================ */
 .hero-actions {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
   margin-bottom: 32px;
-  opacity: 0;
-  transform: translateY(30px);
+  /* REMOVED: opacity: 0 and transform */
+  animation: fadeSlideUp 0.8s ease-out 0.3s both;
 }
 
+/* ============================================================
+   KEY FIX: hero-meta is VISIBLE by default
+   ============================================================ */
 .hero-meta {
   display: flex;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
-  opacity: 0;
-  transform: translateY(30px);
+  /* REMOVED: opacity: 0 and transform */
+  animation: fadeSlideUp 0.8s ease-out 0.4s both;
 }
 
 .meta-item {
@@ -501,13 +541,16 @@ svg {
   color: var(--color-border);
 }
 
+/* ============================================================
+   KEY FIX: hero-visual is VISIBLE by default
+   ============================================================ */
 .hero-visual {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  opacity: 0;
-  transform: scale(0.95);
+  /* REMOVED: opacity: 0 and transform */
+  animation: fadeSlideUp 1s ease-out 0.3s both;
 }
 
 .hero-screenshot {
@@ -527,6 +570,23 @@ svg {
   display: block;
 }
 
+/* Placeholder shown when image fails */
+.hero-screenshot.placeholder {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--color-text-tertiary);
+}
+
+.hero-screenshot.placeholder::before {
+  content: '📄';
+  font-size: 64px;
+  opacity: 0.5;
+}
+
 .screenshot-glow {
   display: none;
 }
@@ -534,21 +594,6 @@ svg {
 @keyframes glow-pulse {
   0%, 100% { opacity: 0.4; transform: scale(1); }
   50% { opacity: 0.6; transform: scale(1.02); }
-}
-
-.screenshot-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  color: var(--color-text-tertiary);
-  font-size: 15px;
-  text-align: center;
-  padding: 20px;
-}
-
-.screenshot-placeholder svg {
-  opacity: 0.5;
 }
 
 /* Scroll indicator */
@@ -562,6 +607,12 @@ svg {
   align-items: center;
   gap: 8px;
   opacity: 0.6;
+  animation: fadeIn 1s ease-out 1s both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 0.6; }
 }
 
 .scroll-mouse {
@@ -636,6 +687,10 @@ section {
   gap: 24px;
 }
 
+/* ============================================================
+   KEY FIX: feature-card is VISIBLE by default
+   Uses CSS animation-delay for stagger effect
+   ============================================================ */
 .feature-card {
   position: relative;
   background: var(--color-bg-card);
@@ -644,9 +699,17 @@ section {
   padding: 32px;
   transition: all var(--transition-base);
   overflow: hidden;
-  opacity: 0;
-  transform: translateY(30px);
+  /* REMOVED: opacity: 0 and transform */
+  /* CSS animation with stagger via nth-child */
+  animation: fadeSlideUp 0.6s ease-out both;
 }
+
+.feature-card:nth-child(1) { animation-delay: 0.1s; }
+.feature-card:nth-child(2) { animation-delay: 0.2s; }
+.feature-card:nth-child(3) { animation-delay: 0.3s; }
+.feature-card:nth-child(4) { animation-delay: 0.4s; }
+.feature-card:nth-child(5) { animation-delay: 0.5s; }
+.feature-card:nth-child(6) { animation-delay: 0.6s; }
 
 .feature-card:hover {
   border-color: var(--color-primary);
@@ -715,11 +778,19 @@ section {
   gap: 32px;
 }
 
+/* ============================================================
+   KEY FIX: screenshot-item is VISIBLE by default
+   ============================================================ */
 .screenshot-item {
   text-align: center;
-  opacity: 0;
-  transform: translateX(30px);
+  /* REMOVED: opacity: 0 and transform */
+  animation: fadeSlideUp 0.6s ease-out both;
 }
+
+.screenshot-item:nth-child(1) { animation-delay: 0.1s; }
+.screenshot-item:nth-child(2) { animation-delay: 0.2s; }
+.screenshot-item:nth-child(3) { animation-delay: 0.3s; }
+.screenshot-item:nth-child(4) { animation-delay: 0.4s; }
 
 .screenshot-box {
   background: var(--color-bg);
@@ -738,6 +809,23 @@ section {
   width: 100%;
   height: auto;
   display: block;
+}
+
+/* Placeholder for failed images */
+.screenshot-box.placeholder {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.screenshot-box.placeholder::before {
+  content: '🖼️';
+  font-size: 48px;
+  opacity: 0.4;
 }
 
 .screenshot-box::before {
@@ -791,15 +879,24 @@ section {
   gap: 12px;
 }
 
+/* ============================================================
+   KEY FIX: faq-item is VISIBLE by default
+   ============================================================ */
 .faq-item {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: hidden;
   transition: all var(--transition-base);
-  opacity: 0;
-  transform: translateY(20px);
+  /* REMOVED: opacity: 0 and transform */
+  animation: fadeSlideUp 0.5s ease-out both;
 }
+
+.faq-item:nth-child(1) { animation-delay: 0.05s; }
+.faq-item:nth-child(2) { animation-delay: 0.1s; }
+.faq-item:nth-child(3) { animation-delay: 0.15s; }
+.faq-item:nth-child(4) { animation-delay: 0.2s; }
+.faq-item:nth-child(5) { animation-delay: 0.25s; }
 
 .faq-item:hover {
   border-color: var(--color-primary-light);
@@ -913,21 +1010,24 @@ section {
   left: -100px;
 }
 
+/* ============================================================
+   KEY FIX: CTA elements are VISIBLE by default
+   ============================================================ */
 .cta-title {
   font-size: clamp(28px, 4vw, 40px);
   font-weight: 700;
   color: #fff;
   margin-bottom: 16px;
-  opacity: 0;
-  transform: translateY(20px);
+  /* REMOVED: opacity: 0 and transform */
+  animation: fadeSlideUp 0.8s ease-out both;
 }
 
 .cta-desc {
   font-size: 16px;
   color: rgba(255, 255, 255, 0.85);
   margin-bottom: 36px;
-  opacity: 0;
-  transform: translateY(20px);
+  /* REMOVED: opacity: 0 and transform */
+  animation: fadeSlideUp 0.8s ease-out 0.1s both;
 }
 
 .btn-cta {
@@ -935,8 +1035,8 @@ section {
   color: var(--color-primary);
   font-size: 16px;
   padding: 16px 40px;
-  opacity: 0;
-  transform: translateY(20px);
+  /* REMOVED: opacity: 0 and transform */
+  animation: fadeSlideUp 0.8s ease-out 0.2s both;
 }
 
 .btn-cta:hover {
@@ -946,7 +1046,7 @@ section {
 }
 
 .btn-cta.btn-pulse {
-  animation: pulse-white 2s ease-in-out infinite;
+  animation: pulse-white 2s ease-in-out infinite, fadeSlideUp 0.8s ease-out 0.2s both;
 }
 
 @keyframes pulse-white {
@@ -1432,7 +1532,7 @@ section {
   }
 }
 
-/* ===== ACCESSIBILITY ===== */
+/* ===== REDUCED MOTION - CRITICAL FOR ACCESSIBILITY ===== */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1440,6 +1540,25 @@ section {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* When reduced motion is preferred, show everything immediately */
+  .hero-badge,
+  .hero-title,
+  .hero-subtitle,
+  .hero-actions,
+  .hero-meta,
+  .hero-visual,
+  .scroll-indicator,
+  .feature-card,
+  .screenshot-item,
+  .faq-item,
+  .cta-title,
+  .cta-desc,
+  .btn-cta {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
   }
 
   html {
@@ -1456,4 +1575,27 @@ section {
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible) {
   outline: none;
+}
+
+/* ============================================================
+   JS ENHANCEMENT CLASSES
+   These are added by JavaScript to enhance CSS animations
+   If JS fails, CSS-only animations still work perfectly
+   ============================================================ */
+.js-enabled .hero-badge,
+.js-enabled .hero-title,
+.js-enabled .hero-subtitle,
+.js-enabled .hero-actions,
+.js-enabled .hero-meta,
+.js-enabled .hero-visual,
+.js-enabled .feature-card,
+.js-enabled .screenshot-item,
+.js-enabled .faq-item,
+.js-enabled .cta-title,
+.js-enabled .cta-desc,
+.js-enabled .btn-cta {
+  /* Disable CSS animations when JS takes over */
+  animation: none;
+  opacity: 1;
+  transform: none;
 }
