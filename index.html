@@ -12,8 +12,12 @@
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
 
+  <!-- Preconnect to CDN -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://cdn.bootcdn.net">
+
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.v2.css">
 </head>
 <body>
 
@@ -92,7 +96,7 @@
       </div>
       <div class="hero-visual" data-animate="visual">
         <div class="hero-screenshot">
-          <img src="hero-screenshot.png" alt="软件界面预览">
+          <img src="hero-screenshot.png" alt="软件界面预览" onerror="this.parentElement.classList.add('placeholder')">
         </div>
       </div>
     </div>
@@ -196,25 +200,25 @@
       <div class="screenshots-grid">
         <div class="screenshot-item" data-animate="screenshot">
           <div class="screenshot-box">
-            <img src="screenshots/screenshot-1-filelist.png" alt="文件列表" loading="lazy">
+            <img src="screenshots/screenshot-1-filelist.png" alt="文件列表" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('placeholder')">
           </div>
           <p class="screenshot-caption">文件列表与状态管理</p>
         </div>
         <div class="screenshot-item" data-animate="screenshot">
           <div class="screenshot-box">
-            <img src="screenshots/screenshot-2-summary.png" alt="摘要展示" loading="lazy">
+            <img src="screenshots/screenshot-2-summary.png" alt="摘要展示" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('placeholder')">
           </div>
           <p class="screenshot-caption">结构化摘要展示</p>
         </div>
         <div class="screenshot-item" data-animate="screenshot">
           <div class="screenshot-box">
-            <img src="screenshots/screenshot-3-darkmode.png" alt="暗黑模式" loading="lazy">
+            <img src="screenshots/screenshot-3-darkmode.png" alt="暗黑模式" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('placeholder')">
           </div>
           <p class="screenshot-caption">暗黑模式界面</p>
         </div>
         <div class="screenshot-item" data-animate="screenshot">
           <div class="screenshot-box">
-            <img src="screenshots/screenshot-4-tags.png" alt="标签管理" loading="lazy">
+            <img src="screenshots/screenshot-4-tags.png" alt="标签管理" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('placeholder')">
           </div>
           <p class="screenshot-caption">标签分类管理</p>
         </div>
@@ -420,9 +424,14 @@
     </div>
   </div>
 
-  <!-- GSAP & ScrollTrigger -->
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-  <script src="script.js"></script>
+  <!--
+    ============================================================
+    JS LOADING: Local files (100% offline-capable)
+    GSAP bundled locally - no network dependency
+    ============================================================
+  -->
+  <script src="js/gsap.min.js"></script>
+  <script src="js/ScrollTrigger.min.js"></script>
+  <script src="script.v2.js"></script>
 </body>
 </html>
